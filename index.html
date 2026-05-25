@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulačka ztrát ve skladu - Gabriela Tomíčková</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #e9a91b; --gold-dark: #c48e10; --gold-light: #fdf3d9;
+  --black: #000; --dark: #111; --mid: #545454; --light: #a8a6a6;
+  --white: #fff; --paper: #f5f4f0; --border: #e2e2e2; --red: #d63c3c;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:"DM Sans",sans-serif; background:var(--paper); color:var(--dark); line-height:1.6; }
+
+nav { background:var(--white); border-bottom:2px solid var(--gold); padding:13px 40px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+.nav-brand { font-family:"Poppins",sans-serif; font-size:14px; font-weight:800; color:var(--black); }
+.nav-brand span { color:var(--gold); }
+.nav-cta { background:var(--gold); color:var(--black); font-size:13px; font-weight:600; padding:8px 20px; border-radius:4px; text-decoration:none; transition:background 0.2s; }
+.nav-cta:hover { background:var(--gold-dark); color:white; }
+
+.page-header { background:var(--white); border-bottom:1px solid var(--border); padding:40px; }
+.page-header-inner { max-width:1040px; margin:0 auto; }
+.tool-badge { display:inline-block; background:var(--gold-light); border:1px solid rgba(233,169,27,0.3); color:var(--gold-dark); font-size:11px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; padding:4px 12px; border-radius:2px; margin-bottom:16px; }
+.page-header h1 { font-family:"Poppins",sans-serif; font-size:clamp(22px,3vw,36px); font-weight:900; color:var(--black); line-height:1.15; letter-spacing:-0.5px; margin-bottom:10px; }
+.page-header h1 em { color:var(--gold); font-style:normal; }
+.page-header p { font-size:15px; color:var(--mid); max-width:600px; line-height:1.7; }
+
+.main { max-width:1040px; margin:0 auto; padding:40px 40px 80px; }
+.calc-grid { display:grid; grid-template-columns:400px 1fr; gap:28px; align-items:start; }
+
+.panel { background:var(--white); border:1px solid var(--border); border-radius:12px; overflow:hidden; position:sticky; top:80px; }
+.panel-section { border-bottom:1px solid var(--border); padding:20px 24px; }
+.panel-section:last-child { border-bottom:none; }
+.panel-section-title { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--light); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.panel-section-title svg { color:var(--gold); }
+
+.input-group { margin-bottom:16px; }
+.input-group:last-child { margin-bottom:0; }
+.input-label { font-size:13px; font-weight:600; color:var(--dark); display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.input-hint { font-size:11px; font-weight:400; color:var(--light); }
+.input-row { display:flex; align-items:center; gap:10px; }
+input[type=range] { flex:1; -webkit-appearance:none; height:3px; border-radius:2px; background:var(--border); outline:none; cursor:pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--gold); border:2px solid var(--white); box-shadow:0 1px 4px rgba(233,169,27,0.5); cursor:pointer; transition:transform 0.15s; }
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+.input-val { font-family:"DM Mono",monospace; font-size:13px; font-weight:500; color:var(--gold-dark); min-width:56px; text-align:right; background:var(--gold-light); padding:3px 8px; border-radius:3px; }
+
+.results { display:flex; flex-direction:column; gap:20px; }
+.result-hero { background:var(--black); border-radius:12px; padding:28px; position:relative; overflow:hidden; }
+.result-hero::after { content:""; position:absolute; bottom:-50px; right:-50px; width:220px; height:220px; border-radius:50%; border:50px solid rgba(233,169,27,0.1); }
+.result-hero-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:8px; }
+.result-hero-num { font-family:"Poppins",sans-serif; font-size:clamp(32px,4vw,48px); font-weight:900; color:var(--gold); line-height:1; margin-bottom:6px; transition:all 0.4s; }
+.result-hero-sub { font-size:13px; color:rgba(255,255,255,0.35); }
+
+.result-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.result-card { background:var(--white); border:1px solid var(--border); border-radius:10px; padding:16px 18px; transition:transform 0.2s, box-shadow 0.2s; }
+.result-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,0.06); }
+.result-card-icon { margin-bottom:10px; }
+.result-card-icon svg { width:20px; height:20px; stroke:var(--gold); }
+.result-card-num { font-family:"Poppins",sans-serif; font-size:22px; font-weight:800; color:var(--dark); line-height:1; transition:all 0.4s; margin-bottom:4px; }
+.result-card-num.red { color:var(--red); }
+.result-card-label { font-size:12px; color:var(--light); }
+
+.breakdown { background:var(--white); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.breakdown-title { padding:14px 20px; border-bottom:1px solid var(--border); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--mid); display:flex; align-items:center; gap:8px; }
+.breakdown-title svg { stroke:var(--gold); }
+.breakdown-row { display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid #f5f5f5; transition:background 0.15s; }
+.breakdown-row:last-child { border-bottom:none; }
+.breakdown-row:hover { background:#fafafa; }
+.breakdown-icon-box {
+  width:32px; height:44px; flex-shrink:0;
+  clip-path: polygon(0 0, 6px 0, 100% 50%, 6px 100%, 0 100%);
+  background:var(--gold);
+}
+.breakdown-text { flex:1; }
+.breakdown-name { font-size:13px; font-weight:600; color:var(--dark); }
+.breakdown-desc { font-size:11px; color:var(--light); margin-top:2px; }
+.breakdown-bar-wrap { width:90px; }
+.breakdown-bar-bg { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.breakdown-bar { height:100%; background:var(--gold); border-radius:2px; transition:width 0.5s ease; }
+.breakdown-val { font-family:"DM Mono",monospace; font-size:12px; font-weight:500; color:var(--mid); min-width:52px; text-align:right; }
+
+.cta-box { background:var(--gold-light); border:1px solid rgba(233,169,27,0.3); border-radius:12px; padding:22px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.cta-box-text strong { font-size:14px; font-weight:700; color:var(--dark); display:block; margin-bottom:3px; }
+.cta-box-text span { font-size:13px; color:var(--mid); }
+.cta-box a { background:var(--black); color:var(--white); font-size:13px; font-weight:600; padding:10px 20px; border-radius:6px; text-decoration:none; white-space:nowrap; transition:background 0.2s; flex-shrink:0; }
+.cta-box a:hover { background:var(--gold); color:var(--black); }
+
+footer { background:#0a0a0a; padding:24px 40px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.footer-brand { font-family:"Poppins",sans-serif; font-size:13px; font-weight:700; color:rgba(255,255,255,0.4); }
+.footer-brand span { color:var(--gold); }
+.footer-legal { font-size:11px; color:rgba(255,255,255,0.2); }
+
+@media (max-width:860px) {
+  .calc-grid { grid-template-columns:1fr; }
+  .panel { position:static; }
+  .result-grid { grid-template-columns:1fr 1fr; }
+  .main { padding:24px 20px 60px; }
+  nav, .page-header { padding-left:20px; padding-right:20px; }
+  footer { padding:20px; flex-direction:column; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Gabriela <span>Tomíčková</span></div>
+  <a href="mailto:tomickova.info@gmail.com" class="nav-cta">Napsat email</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="tool-badge">Kalkulačka ztrát ve skladu</div>
+    <h1>Kolik vás stojí <em>neviditelné ztráty</em> ve skladu?</h1>
+    <p>Zadejte pár čísel. Uvidíte kolik hodin a korun vám každý měsíc odchází v rutině, které se dá předejít. Výsledek je orientační, ale z praxe vím, že bývá překvapivě blízko.</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="calc-grid">
+
+    <div class="panel">
+      <div class="panel-section">
+        <div class="panel-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Váš sklad
+        </div>
+        <div class="input-group">
+          <div class="input-label">Počet pracovníků ve skladu <span class="input-hint">fyzická práce</span></div>
+          <div class="input-row"><input type="range" id="lide" min="1" max="50" value="8" oninput="update()"><span class="input-val" id="lide-val">8</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Počet směn denně</div>
+          <div class="input-row"><input type="range" id="smeny" min="1" max="3" value="2" step="1" oninput="update()"><span class="input-val" id="smeny-val">2</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Průměrná hodinová mzda <span class="input-hint">hrubá, Kč</span></div>
+          <div class="input-row"><input type="range" id="mzda" min="150" max="400" value="220" step="10" oninput="update()"><span class="input-val" id="mzda-val">220 Kč</span></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Kde ztrácíte čas
+        </div>
+        <div class="input-group">
+          <div class="input-label">Zbytečná chůze a přesuny <span class="input-hint">min / směna / člověk</span></div>
+          <div class="input-row"><input type="range" id="chuze" min="0" max="120" value="60" step="5" oninput="update()"><span class="input-val" id="chuze-val">60 min</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Ruční administrativa <span class="input-hint">min / den / člověk</span></div>
+          <div class="input-row"><input type="range" id="admin" min="0" max="120" value="30" step="5" oninput="update()"><span class="input-val" id="admin-val">30 min</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Počet kamionů / dodávek týdně</div>
+          <div class="input-row"><input type="range" id="kamionu" min="0" max="30" value="5" step="1" oninput="update()"><span class="input-val" id="kamionu-val">5</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Ruční zpracování příjmu / výdeje <span class="input-hint">min / kamion</span></div>
+          <div class="input-row"><input type="range" id="kamion-cas" min="0" max="120" value="45" step="5" oninput="update()"><span class="input-val" id="kamion-cas-val">45 min</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="result-hero">
+        <div class="result-hero-label">Celková ztráta za rok</div>
+        <div class="result-hero-num" id="res-rok">0 Kc</div>
+        <div class="result-hero-sub">placená práce, která nepřináší hodnotu</div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-card-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="result-card-num red" id="res-mesic">0</div>
+          <div class="result-card-label">Kč za měsíc</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div class="result-card-num" id="res-hodiny">0</div>
+          <div class="result-card-label">hodin zbytečně / týden</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+          <div class="result-card-num" id="res-uvazek">0</div>
+          <div class="result-card-label">lidé pracují jen na ztrátách</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+          <div class="result-card-num" id="res-km">0</div>
+          <div class="result-card-label">km nachozeno navíc / rok</div>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <div class="breakdown-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Kde ztráty vznikají
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-icon-box"></div>
+          <div class="breakdown-text">
+            <div class="breakdown-name">Zbytečná chůze a přesuny</div>
+            <div class="breakdown-desc">špatné rozmístění zboží, neoptimální trasy vychystání</div>
+          </div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar-bg"><div class="breakdown-bar" id="bar-chuze" style="width:0%"></div></div></div>
+          <div class="breakdown-val" id="val-chuze">0 h/týd</div>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-icon-box"></div>
+          <div class="breakdown-text">
+            <div class="breakdown-name">Ruční administrativa</div>
+            <div class="breakdown-desc">přepisy, manuální kontroly, papírové záznamy</div>
+          </div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar-bg"><div class="breakdown-bar" id="bar-admin" style="width:0%"></div></div></div>
+          <div class="breakdown-val" id="val-admin">0 h/týd</div>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-icon-box"></div>
+          <div class="breakdown-text">
+            <div class="breakdown-name">Příjem a výdej kamionu</div>
+            <div class="breakdown-desc">ručně, bez systému, přeskládávání po odjezdu</div>
+          </div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar-bg"><div class="breakdown-bar" id="bar-kamion" style="width:0%"></div></div></div>
+          <div class="breakdown-val" id="val-kamion">0 h/týd</div>
+        </div>
+      </div>
+
+      <div class="cta-box">
+        <div class="cta-box-text">
+          <strong>Vidíte potenciál ke zlepšení?</strong>
+          <span>Napište mi - podíváme se na to společně.</span>
+        </div>
+        <a href="mailto:tomickova.info@gmail.com">Napsat email</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">Gabriela <span>Tomíčková</span> - AI a Procesní konzultant</div>
+  <div class="footer-legal">Příčná 49, Vrchlabí - IČO: 75905311</div>
+</footer>
+
+<script>
+function fmt(n) { return Math.round(n).toLocaleString("cs-CZ"); }
+function update() {
+  const lide = +document.getElementById("lide").value;
+  const smeny = +document.getElementById("smeny").value;
+  const mzda = +document.getElementById("mzda").value;
+  const chuze = +document.getElementById("chuze").value;
+  const admin = +document.getElementById("admin").value;
+  const kamionu = +document.getElementById("kamionu").value;
+  const kamionCas = +document.getElementById("kamion-cas").value;
+
+  document.getElementById("lide-val").textContent = lide;
+  document.getElementById("smeny-val").textContent = smeny;
+  document.getElementById("mzda-val").textContent = mzda + " Kč";
+  document.getElementById("chuze-val").textContent = chuze + " min";
+  document.getElementById("admin-val").textContent = admin + " min";
+  document.getElementById("kamionu-val").textContent = kamionu;
+  document.getElementById("kamion-cas-val").textContent = kamionCas + " min";
+
+  const chuzeh = (chuze / 60) * smeny * lide * 5;
+  const adminh = (admin / 60) * lide * 5;
+  const kamionh = (kamionCas / 60) * kamionu;
+  const celkem = chuzeh + adminh + kamionh;
+  const mesic = celkem * 4.33 * mzda * 1.34;
+  const rok = mesic * 12;
+  const km = (chuze / 60) * smeny * 4 * 250;
+  const uvazek = (celkem * 52) / 1800;
+  const total = celkem || 1;
+
+  document.getElementById("res-rok").textContent = fmt(rok) + " Kč";
+  document.getElementById("res-mesic").textContent = fmt(mesic);
+  document.getElementById("res-hodiny").textContent = fmt(celkem);
+  document.getElementById("res-km").textContent = fmt(km);
+  document.getElementById("res-uvazek").textContent = uvazek.toFixed(1);
+  document.getElementById("bar-chuze").style.width = (chuzeh/total*100) + "%";
+  document.getElementById("bar-admin").style.width = (adminh/total*100) + "%";
+  document.getElementById("bar-kamion").style.width = (kamionh/total*100) + "%";
+  document.getElementById("val-chuze").textContent = chuzeh.toFixed(1) + " h/týd";
+  document.getElementById("val-admin").textContent = adminh.toFixed(1) + " h/týd";
+  document.getElementById("val-kamion").textContent = kamionh.toFixed(1) + " h/týd";
+}
+update();
+</script>
+</body>
+</html>
